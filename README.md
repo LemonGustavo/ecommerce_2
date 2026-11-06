@@ -1,4 +1,4 @@
-# E-commerce (SOLID + InversifyJS)
+# E-commerce - Projeto 2
 
 Projeto de e-commerce modificado para usar InversifyJS como container de IoC. Para obtenção de nota na matéria de Arquitetura de Software. 
 Contém dois modos de execução selecionáveis por variável de ambiente (`APP_ENV`), sem mudar as regras de negócio do projeto original, salvo em: https://github.com/LemonGustavo/ecommerce/tree/main.
