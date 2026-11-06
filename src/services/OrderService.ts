@@ -1,8 +1,9 @@
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../container/types';
 import { IOrderRepository } from '../repositories/IOrderRepository';
 import { ProductFactory } from '../domain/ProductFactory';
-import { CreditCardPayment } from '../payment/CreditCardPayment';
-import { PixPayment } from '../payment/PixPayment';
 import { IPaymentMethod } from '../payment/IPaymentMethod';
+import { PaymentMethodRegistry } from '../payment/PaymentMethodRegistry';
 import { NotificationService } from './NotificationService';
 import { IProduct } from '../domain/IProduct';
 import logger from '../lib/logger';
@@ -53,23 +54,14 @@ export interface ProcessOrderResult {
     emailPreview: string | false;
 }
 
+@injectable()
 export class OrderService {
-    orderRepository: IOrderRepository;
-    notificationService: NotificationService;
-    productFactory: ProductFactory;
-    creditCardPayment: CreditCardPayment;
-    pixPayment: PixPayment;
-
     constructor(
-        orderRepository: IOrderRepository,
-        notificationService: NotificationService,
-    ){
-        this.orderRepository = orderRepository;
-        this.notificationService = notificationService;
-        this.productFactory = new ProductFactory();
-        this.creditCardPayment = new CreditCardPayment();
-        this.pixPayment = new PixPayment();
-    }
+        @inject(TYPES.OrderRepository) private readonly orderRepository: IOrderRepository,
+        @inject(TYPES.NotificationService) private readonly notificationService: NotificationService,
+        @inject(TYPES.ProductFactory) private readonly productFactory: ProductFactory,
+        @inject(TYPES.PaymentMethodRegistry) private readonly paymentMethodRegistry: PaymentMethodRegistry,
+    ) {}
 
     async processOrder(input: ProcessOrder): Promise<ProcessOrderResult> {
         const { customer, items, paymentMethod, paymentDetails } = input;
@@ -89,23 +81,12 @@ export class OrderService {
             }
 
             const product = this.productFactory.create(productFromDb);
-
             totalAmount += product.price * item.quantity;
             totalAmount += product.calculateFreight(item.quantity);
-
             products.push(Object.assign(product, { quantity: item.quantity }));
         }
-
-        let paymentMethodInstance: IPaymentMethod;
-
-        if (paymentMethod === 'credit_card') {
-            paymentMethodInstance = this.creditCardPayment;
-        } else if (paymentMethod === 'pix') {
-            paymentMethodInstance = this.pixPayment;
-        } else {
-            throw new UnsupportedPaymentMethodError(paymentMethod);
-        }
-
+        
+        const paymentMethodInstance: IPaymentMethod = this.paymentMethodRegistry.get(paymentMethod);
         const paymentResult = await paymentMethodInstance.process({
             amount: totalAmount,
             details: paymentDetails,

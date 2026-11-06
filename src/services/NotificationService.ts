@@ -1,4 +1,6 @@
 import { IMailProvider } from '../providers/IMailProvider';
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../container/types'
 
 export interface OrderNotificationData {
     orderId: number;
@@ -11,10 +13,11 @@ export interface OrderNotificationData {
     }>;
 }
 
+@injectable()
 export class NotificationService {
     mailProvider: IMailProvider;
 
-    constructor(mailProvider: IMailProvider) {
+    constructor(@inject(TYPES.MailProvider) mailProvider: IMailProvider) {
         this.mailProvider = mailProvider;
     }
 

@@ -1,11 +1,14 @@
 import { Request, Response } from 'express';
 import { OrderService, EmptyCartError, ProductNotFoundError, UnsupportedPaymentMethodError, PaymentRefusedError } from '../services/OrderService';
 import logger from '../lib/logger';
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../container/types';
 
+@injectable()
 export class OrderController {
     private orderService: OrderService;
 
-    constructor(orderService: OrderService) {
+    constructor(@inject(TYPES.OrderService) orderService: OrderService) {
         this.orderService = orderService;
     }
 

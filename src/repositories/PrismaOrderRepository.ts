@@ -1,10 +1,13 @@
 import { PrismaClient } from '@prisma/client';
 import { IOrderRepository, ICreateOrder, IOrder } from './IOrderRepository';
+import { injectable, inject } from 'inversify';
+import { TYPES } from '../container/types';
 
+@injectable()
 export class PrismaOrderRepository implements IOrderRepository {
     prisma: PrismaClient;
 
-    constructor(prisma: PrismaClient) {
+    constructor(@inject(TYPES.PrismaClient) prisma: PrismaClient) {
         this.prisma = prisma;
     }
 
